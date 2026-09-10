@@ -1,0 +1,45 @@
+.. Scraped for local reference from the public RLGym API docs.
+.. Source: https://captainglac1er.github.io/rocket-league-gym/autoapi/rocket_league/state_mutators/mutator_sequence/index.html
+.. Format: Sphinx RST source
+
+rocket_league.state_mutators.mutator_sequence
+=============================================
+
+.. py:module:: rocket_league.state_mutators.mutator_sequence
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   rocket_league.state_mutators.mutator_sequence.MutatorSequence
+
+
+Module Contents
+---------------
+
+.. py:class:: MutatorSequence(*mutators: rlgym.api.StateMutator[rlgym.api.StateType])
+
+   Bases: :py:obj:`rlgym.api.StateMutator`\ [\ :py:obj:`rlgym.api.StateType`\ ]
+
+
+   A StateMutator that applies a sequence of StateMutators to the state.
+
+
+   .. py:attribute:: mutators
+      :value: ()
+
+
+
+   .. py:method:: apply(state: rlgym.api.StateType, shared_info: Dict[str, Any]) -> None
+
+      Function to be called each time the environment is reset.
+      This function should change any desired values of the State.
+      The values within State are sent to the transition engine to set up the initial state.
+
+      :param state: State object to be modified with desired state values.
+      :param shared_info: A dictionary with shared information across all config objects.
+
+
+

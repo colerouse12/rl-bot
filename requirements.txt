@@ -1,0 +1,12 @@
+# Python 3.14 venv
+# Note: rlgym-rocket-league still declares numpy<2 on PyPI; we use NumPy 2.x
+# (required for cp314 wheels). Install rocket-league with --no-deps if pip
+# tries to downgrade numpy, then install rocketsim separately.
+
+numpy>=2.2
+rlgym==2.0.1
+rlgym-api==2.0.0
+rlgym-rocket-league==2.0.1
+rlgym-learn==2.0.0
+rocketsim>=2.2.1
+rlbot==2.0.0b55
