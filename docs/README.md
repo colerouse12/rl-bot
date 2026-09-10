@@ -1,16 +1,18 @@
-# Local RLGym documentation
+# Project documentation
 
-Offline copies of public RLGym docs for this project.
+Read only the note that owns the question:
 
-| Folder | Contents | Upstream |
-|---|---|---|
-| `rlgym-site/` | Tutorials & guides (Getting Started, Rocket League, Learn, Tools, Cheatsheets) | [rlgym.org](https://rlgym.org/) |
-| `rlgym-api/` | Sphinx AutoAPI class/module reference | [API docs](https://captainglac1er.github.io/rocket-league-gym/) |
-| `rlgym/` | Upstream Sphinx scaffold from the RLGym GitHub `docs/` tree | [RLGym/rlgym](https://github.com/RLGym/rlgym/tree/main/docs) |
+- [Environment setup](project/setup.md) owns Python, virtual-environment creation,
+  dependency installation and compatibility checks.
+- [RocketSim](project/rocketsim.md) owns native simulation prerequisites, timing and
+  physics verification.
+- [Training workflow](project/training-and-checkpoints.md) owns the planned learner,
+  tensor, checkpoint, evaluation and export contracts.
+- [Development plan](project/development-plan.md) owns milestone order, current status
+  and completion criteria.
+- [Official references](REFERENCES.md) is the external-documentation launchpad for
+  RLGym, RocketSim, RLGym Learn, RLBot and supporting APIs.
 
-Refresh mirrors:
-
-```bash
-.\.venv\Scripts\python.exe scripts\scrape_rlgym_docs.py
-.\.venv\Scripts\python.exe scripts\scrape_rlgym_api_docs.py
-```
+The repository no longer mirrors upstream websites. Project notes capture only our
+architecture decisions and verified results. Use the `rl-bot-docs` skill for targeted,
+version-aware lookup; `AGENTS.md` contains the portable fallback.

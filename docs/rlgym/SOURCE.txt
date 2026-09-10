@@ -1,4 +1,0 @@
-source: https://github.com/RLGym/rlgym
-commit: 2fc8d435663454b7fe45d2556777efd65cba8c2d
-path: docs/
-copied: 2026-09-09T19:45:56.7218475-05:00

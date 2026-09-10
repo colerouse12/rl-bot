@@ -18,3 +18,9 @@ runs/
 wandb/
 .DS_Store
 Thumbs.db
+
+.venv*/
+shmem_flinks/
+agent_controller_checkpoints/
+artifacts/
+collision_meshes/
