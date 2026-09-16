@@ -12,11 +12,12 @@ Milestones 1-3 passed on 2026-09-16. The Release CPU trainer builds and passes
 native contract/physics checks, optimizer updates, fresh-process resume,
 checkpoint retention, rejection checks and an update across eight parallel 1v1
 arenas. The corrected observation schema is `rlbot.advanced-1v1.v2`.
-A twenty-minute CPU training run started at 2026-09-16 06:50:27 UTC using the
-eight-arena configuration. Its native time limit saves after the current update;
-the supervisor records completion separately from live metrics. The final result
-is pending. The normal training command is `.\scripts\train.ps1`; see the training
-note for evidence and launch details.
+A twenty-minute CPU training run completed on 2026-09-16 using eight arenas:
+12,464,976 transitions, 1,475 iterations, a verified time-limit checkpoint and
+1,366 combined goals. The dashboard shows goals and estimated historical timeouts
+per five minutes of simulated arena time. This establishes scoring activity,
+not competitive playing strength. The normal training command is
+`.\scripts\train.ps1`; see the training note for evidence and launch details.
 
 ## Milestones 1-3: training readiness
 

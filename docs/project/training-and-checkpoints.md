@@ -100,9 +100,21 @@ iterations, 8,784 transitions and a `time-limit` checkpoint after 3.092 seconds.
 Evidence is in `runs/supervisor-check-20260916T0648/status.json`; the earlier
 nine-check acceptance report predates the duration/telemetry addition.
 
-The requested twenty-minute run, `training-20m-20260916T065026Z`, started at
-2026-09-16 06:50:27 UTC using `configs/1v1-cpu.json` and
-`checkpoints/1v1-cpu/`. Completion and policy-quality results are not yet claimed.
+The requested twenty-minute run, `training-20m-20260916T065026Z`, ran from
+2026-09-16 06:50:27 to 07:10:28 UTC using `configs/1v1-cpu.json`. It exited with
+code 0 after 1,200.458 training seconds, 12,464,976 transitions and 1,475 PPO
+iterations (10,384 transitions/second averaged over the training timer).
+`checkpoints/1v1-cpu/12464976/PROJECT_METADATA.json` records `time-limit`, and all
+recorded metrics are finite. The run directory holds `status.json`, `results.json`
+and the console log; these artifacts remain ignored.
+
+Combined scoring was 1,366 goals: 0.986 per five minutes of simulated arena time
+over the full run, rising to 1.834 over its final 100 updates. The corresponding
+timeout estimates are 21.347 and 14.693 per five minutes. These timeout values
+are estimates because this executable did not record reset counts directly.
+Across the first/last 100 updates, mean reward changed from 0.419 to 1.026,
+critic loss from 1.580 to 0.141, and policy entropy from 0.765 to 0.703. This
+demonstrates learning activity and actual goals, not evaluated playing strength.
 
 ## Local training dashboard
 
@@ -119,6 +131,39 @@ checkpoint. Metric history is bounded to the last 4 MiB / 2,400 records, so a
 long run may show only its recent history. Incomplete JSONL records are skipped.
 Reward/loss/entropy describe training behavior; evaluated win rates and playing
 strength are not yet available.
+
+The server now scans historical metrics once, then caches its byte offset,
+aggregate scoring totals, the last 100 scoring records and bounded chart rows.
+Refreshes parse only appended complete lines; a partial final line is retried on
+the next refresh. A server restart reconstructs the cache from disk. Changes in
+file identity/path or a truncated file reset the cache. Status and checkpoint
+metadata are reread on refresh. Browser polling remains every three seconds;
+there is still JSON serialization, local transfer and chart rendering work.
+No trainer-throughput benchmark has measured this monitoring overhead.
+
+Goals and timeout resets use **simulated arena time**, summing exposure across
+arenas; they are not counts per five wall-clock training minutes. For historical
+1v1 records, exact goals equal `Game/Goal * Collected Timesteps / 2`, and arena
+seconds equal `Collected Timesteps / 2 * tick_skip / 120`. Timeout estimates use
+`arena_steps / Episode Length - goals`; completed trajectory boundaries and PPO
+truncations make that calculation approximate. The dashboard labels it Estimated.
+Full totals use all valid records, independently of the bounded chart window.
+
+Subsequent builds directly report per-update `Game/Goals`, `Game/Timeouts`,
+`Game/Completed Episodes` and `Game/Simulated Seconds`. A timeout is an environment
+episode ending without a goal; the current causes are no-touch or maximum duration.
+The dashboard prefers these direct counters. Reporting does not change rewards,
+observations, action sampling or optimizer settings. Direct counters were added
+after the twenty-minute run stopped, so its timeout history remains estimated.
+
+The counter build passed both CTests and an isolated two-second smoke run:
+34 updates, 5,288 transitions, 34 completed episodes/timeout resets, explicit zero
+goals and 176.267 simulated arena seconds. Every iteration satisfied
+`goals + timeouts = completed episodes`, matched simulated time to collected steps,
+and persisted the counters in its final checkpoint. Evidence is
+`artifacts/training/event-counters-check-20260916T071220Z/verification.json`.
+Five dashboard tests cover historical/exact counters, partial appends, repeat
+reads, file rewrites/cache resets and full totals outliving the bounded chart window.
 
 ## Versioned 1v1 contract
 
@@ -156,6 +201,27 @@ boost conservation 0.2, zero-sum bump 20, zero-sum demo 80, goal 150. These are
 initial shaping choices, not evidence of policy quality. Every reward term,
 observation, model output, loss, gradient and updated parameter is checked for
 finite values. Iteration reports must show optimizer steps and parameter changes.
+
+The weights were copied from `src/ExampleMain.cpp` at the pinned GigaLearn commit
+as an infrastructure baseline; they were not derived or tuned for this bot's 1v1
+performance. Air reward applies to any airborne state, strong-touch reward measures
+ball velocity change rather than shot accuracy, and boost conservation rewards
+holding boost even while idle. These can encourage behavior that does not help win.
+The `0.5` argument on bump/demo zero-sum wrappers controls team sharing, not opponent
+penalty; in 1v1 each simplifies to own reward minus opponent reward.
+
+The policy maps the 109-value observation to probabilities over 90 controller
+combinations and samples an action every eight physics ticks (15 decisions per
+simulated second). Previous controls run for the seven-tick action delay. The
+critic predicts future reward for training; it does not choose the action. PPO
+adjusts probabilities using outcomes relative to that prediction. Both sides
+currently use the same learning policy, with historical-opponent sampling disabled.
+
+`Average Step Reward` is the combined raw reward mean. Goal and zero-sum terms
+cancel between both players in balanced self-play batches, so aggregate reward
+mainly reflects the remaining shaping signals. `Critic Loss` concerns normalized
+value targets. `Policy Entropy` is normalized by `log(90)` with the current mask
+entropy setting; lower entropy means more concentrated actions, not proof of skill.
 
 ## Configurations
 

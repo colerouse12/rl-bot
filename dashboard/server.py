@@ -13,11 +13,13 @@ import os
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
+from scoring import ScoringHistory
 
 ROOT = Path(__file__).resolve().parents[1]
 DASHBOARD = Path(__file__).resolve().parent
 MAX_METRIC_BYTES = 4 * 1024 * 1024
 MAX_METRIC_ROWS = 2400
+SCORING_HISTORY = ScoringHistory()
 
 
 def _finite(value):
@@ -164,7 +166,7 @@ def checkpoint_info(checkpoint_dir: Path) -> dict:
 def snapshot() -> dict:
     status = load_status()
     if not status:
-        return {"run": None, "checkpoint": None, "metrics": [], "server": {"root": str(ROOT)}}
+        return {"run": None, "checkpoint": None, "metrics": [], "scoring": None, "server": {"root": str(ROOT)}}
     raw_dir = status.get("checkpoint_dir")
     directory = Path(raw_dir) if isinstance(raw_dir, str) else Path("checkpoints/1v1-cpu")
     if not directory.is_absolute():
@@ -172,11 +174,14 @@ def snapshot() -> dict:
     if not _under_root(directory):
         directory = ROOT / "checkpoints/1v1-cpu"
     info = checkpoint_info(directory.resolve())
+    metric_file = _metric_path(directory.resolve())
+    scoring = SCORING_HISTORY.read(metric_file, status.get("run_config", {}).get("tick_skip", 8)) if metric_file else None
     return {
         "run": status,
         "checkpoint": info,
-        "metrics": read_metrics(directory.resolve()),
-        "server": {"root": str(ROOT), "metric_file": str(_metric_path(directory.resolve()).relative_to(ROOT)) if _metric_path(directory.resolve()) else None},
+        "metrics": [_finite(row) for row in SCORING_HISTORY.metrics()] if metric_file else [],
+        "scoring": scoring,
+        "server": {"root": str(ROOT), "metric_file": str(metric_file.relative_to(ROOT)) if metric_file else None},
     }
 
 

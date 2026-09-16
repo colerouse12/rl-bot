@@ -526,7 +526,13 @@ int main(int argc, char** argv) {
         const auto cfg = LearnerConfig(config);
         auto stepCallback = [](GGL::Learner* learner, const std::vector<RLGC::GameState>& states, GGL::Report& report) {
             for (const float reward : learner->envSet->state.rewards) Require(std::isfinite(reward), "Combined reward is nonfinite");
-            for (const auto& state : states) {
+            for (size_t arenaIndex = 0; arenaIndex < states.size(); ++arenaIndex) {
+                const auto& state = states[arenaIndex];
+                const bool episodeCompleted = learner->envSet->state.terminals[arenaIndex] != 0;
+                report.Add("Game/Goals", state.goalScored ? 1.0 : 0.0);
+                report.Add("Game/Timeouts", episodeCompleted && !state.goalScored ? 1.0 : 0.0);
+                report.Add("Game/Completed Episodes", episodeCompleted ? 1.0 : 0.0);
+                report.Add("Game/Simulated Seconds", state.deltaTime);
                 report.AddAvg("Game/Goal", state.goalScored ? 1.0 : 0.0);
                 for (const auto& player : state.players) report.AddAvg("Player/Ball Touch", player.ballTouchedStep ? 1.0 : 0.0);
             }
