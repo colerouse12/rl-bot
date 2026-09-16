@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/ZealanL/GigaLearnCPP-Leak.git",
+  "commit": "86e11c3881a21225a43c36b14af40f0b3c87e7dd",
+  "layout": "The published snapshot contains ordinary source trees, not gitlink submodules. Tree IDs pin the bundled components; independent upstream commit IDs are not supplied.",
+  "trees": {
+    "GigaLearnCPP/RLGymCPP": "ccf16f6de81de2e553e9296b7edca7e205ec45c2",
+    "GigaLearnCPP/RLGymCPP/RocketSim": "43a3765dc8a778f7f4b9168b7db5af94b12767e0",
+    "GigaLearnCPP/pybind11": "c277308eee38ec457032f338301bb21e766339a8",
+    "RLBotCPP": "be576ce6cb75f6a8173bdddbab70841d44a2d0e6"
+  },
+  "source_policy": "Fetch the author's published snapshot into ignored artifacts/gigalearn for local use. Do not vendor or redistribute its source or binaries; redistribution terms remain unresolved. Project-owned integration code and reproducible local adaptations are tracked separately.",
+  "python": "3.11.16",
+  "libtorch": "2.14.0+cpu, supplied by the pinned Python torch wheel",
+  "patch_script": "scripts/patch_gigalearn.py",
+  "runtime_patch_schema": "rlbot.runtime.v2",
+  "observation_schema": "rlbot.advanced-1v1.v2"
+}

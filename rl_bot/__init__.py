@@ -1,1 +1,1 @@
-"""Local 1v1 RLGym Learn bot."""
+"""Local support tools for the GigaLearn-trained 1v1 bot."""

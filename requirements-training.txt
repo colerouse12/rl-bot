@@ -1,0 +1,12 @@
+# Windows CPU LibTorch headers/libraries are supplied by this Python wheel.
+# Use Python 3.11 and install requirements-lock.txt first.
+torch==2.14.0
+filelock==3.32.6
+typing-extensions==4.16.0
+setuptools==84.0.0
+sympy==1.14.0
+networkx==3.6.1
+jinja2==3.1.6
+fsspec==2026.7.0
+mpmath==1.3.0
+markupsafe==3.0.3

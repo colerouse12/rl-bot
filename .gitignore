@@ -6,6 +6,12 @@ __pycache__/
 .eggs/
 dist/
 build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+*.sln
+*.vcxproj*
+libtorch/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

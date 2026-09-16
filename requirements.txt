@@ -1,11 +1,8 @@
-# Python 3.11; direct dependencies for the selected RLGym Learn stack.
+# Python 3.11 support/reference stack. GigaLearn and LibTorch are C++ dependencies.
 numpy==1.26.4
-rlgym[rl-sim]==2.0.1
+rlgym==2.0.1
 rlgym-api==2.0.0
 rlgym-rocket-league==2.0.1
 rocketsim==2.2.1
-rlgym-learn==2.0.0
-rlgym-learn-algos==0.4.2
-torch==2.14.0
 rlgym-rlbot==0.3.0
 rlbot==2.0.0b52

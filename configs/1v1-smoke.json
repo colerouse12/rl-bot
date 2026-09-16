@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "run_name": "1v1-smoke",
+  "device": "cpu",
+  "random_seed": 123,
+  "torch_threads": 2,
+  "num_games": 1,
+  "tick_skip": 8,
+  "action_delay": 7,
+  "mesh_dir": "collision_meshes",
+  "checkpoint_dir": "checkpoints/1v1-smoke",
+  "max_iterations": 1,
+  "timesteps_per_save": 128,
+  "checkpoints_to_keep": 3,
+  "environment": { "no_touch_seconds": 5.0, "episode_seconds": 15.0 },
+  "network": {
+    "shared_layers": [128, 128],
+    "policy_layers": [128, 128],
+    "critic_layers": [128, 128],
+    "layer_norm": true
+  },
+  "ppo": {
+    "timesteps_per_iteration": 128,
+    "batch_size": 128,
+    "minibatch_size": 128,
+    "epochs": 1,
+    "policy_learning_rate": 0.00015,
+    "critic_learning_rate": 0.00015,
+    "entropy_scale": 0.035,
+    "gae_gamma": 0.99,
+    "gae_lambda": 0.95
+  }
+}
