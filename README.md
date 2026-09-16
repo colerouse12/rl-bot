@@ -31,6 +31,12 @@ run. Existing checkpoints require `-Resume`; incompatible or incomplete saves
 are rejected. The [training workflow](docs/project/training-and-checkpoints.md)
 describes settings, contract, retention and validation results.
 
+To watch a supervised timed run, launch
+`.\.venv\Scripts\python.exe dashboard/server.py` and open
+[the local dashboard](http://127.0.0.1:8765/). See the
+[dashboard guide](dashboard/README.md) and the monitored-run command in the
+training workflow.
+
 Native readiness must be established by `verify_training.py`, which performs
 real optimizer updates and fresh-process resume. Its generated checkpoints and
 logs are isolated under ignored `artifacts/training/`. The normal training run

@@ -104,6 +104,22 @@ The requested twenty-minute run, `training-20m-20260916T065026Z`, started at
 2026-09-16 06:50:27 UTC using `configs/1v1-cpu.json` and
 `checkpoints/1v1-cpu/`. Completion and policy-quality results are not yet claimed.
 
+## Local training dashboard
+
+Launch `.\.venv\Scripts\python.exe dashboard/server.py` and open
+`http://127.0.0.1:8765/`. This Python-standard-library server and HTML/CSS/JavaScript
+page read the supervised run's status, live metrics and checkpoint metadata.
+The page refreshes every three seconds and displays counters, speed, reward,
+critic loss and policy entropy. It binds to loopback and provides read-only
+monitoring. The [dashboard guide](../../dashboard/README.md) owns launch options.
+
+The dashboard was verified against the active eight-arena run on 2026-09-16:
+its browser counters updated and the API returned the live metrics and latest
+checkpoint. Metric history is bounded to the last 4 MiB / 2,400 records, so a
+long run may show only its recent history. Incomplete JSONL records are skipped.
+Reward/loss/entropy describe training behavior; evaluated win rates and playing
+strength are not yet available.
+
 ## Versioned 1v1 contract
 
 - One blue and one orange car, with seeded random kickoff resets.
