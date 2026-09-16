@@ -92,6 +92,8 @@ checked before copying source.
 - CMake: [current documentation](https://cmake.org/cmake/help/latest/)
 - MSVC: [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 - [Visual Studio installer command-line parameters](https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2022)
+- Windows: [SetThreadExecutionState](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate)
+  for the supervisor's temporary idle-sleep request (verified 2026-09-16).
 - NumPy 1.26: [manual](https://numpy.org/doc/1.26/),
   [copies and views](https://numpy.org/doc/1.26/user/basics.copies.html),
   [broadcasting](https://numpy.org/doc/1.26/user/basics.broadcasting.html),

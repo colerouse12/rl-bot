@@ -5,6 +5,7 @@ param(
     [string]$MeshDirectory = '',
     [ValidateRange(0, 2147483647)][int]$MaxIterations = 0,
     [ValidateRange(1, 2147483647)][Nullable[int]]$MaxSeconds = $null,
+    [ValidateRange(1, 9223372036854775807)][Nullable[long]]$TargetTimesteps = $null,
     [switch]$Resume,
     [switch]$CheckEnvironment,
     [switch]$ContractCheck,
@@ -27,6 +28,7 @@ $trainerArgs = @('--config', $Config, '--mesh-dir', $MeshDirectory)
 if ($CheckpointDirectory) { $trainerArgs += @('--checkpoint-dir', $CheckpointDirectory) }
 if ($PSBoundParameters.ContainsKey('MaxIterations')) { $trainerArgs += @('--max-iterations', [string]$MaxIterations) }
 if ($PSBoundParameters.ContainsKey('MaxSeconds')) { $trainerArgs += @('--max-seconds', [string]$MaxSeconds) }
+if ($PSBoundParameters.ContainsKey('TargetTimesteps')) { $trainerArgs += @('--target-timesteps', [string]$TargetTimesteps) }
 if ($Resume) { $trainerArgs += '--resume' }
 if ($CheckEnvironment) { $trainerArgs += '--check-environment' }
 if ($ContractCheck) { $trainerArgs += '--contract-check' }

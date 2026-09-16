@@ -52,6 +52,9 @@ Follow [setup](setup.md), then run from the repository root:
 
 # Train for twenty minutes, finishing the current update before saving.
 .\scripts\train.ps1 -MaxSeconds 1200
+
+# Resume until the cumulative transition count reaches one billion.
+.\scripts\train.ps1 -Resume -TargetTimesteps 1000000000
 ```
 
 `train.ps1` supplies the embedded Python runtime and an explicit mesh path. It
@@ -76,15 +79,22 @@ loading. The current PPO update finishes before the trainer saves with
 `save_reason=time-limit` and exits. Final metadata records
 `duration_limit_seconds` and `elapsed_training_seconds`.
 
+`-TargetTimesteps` / `--target-timesteps` specifies a positive signed-64-bit
+**cumulative transition target**, including transitions loaded from a checkpoint.
+It saves with `save_reason=timestep-target` after a completed PPO update, so the
+final count can slightly exceed the target. Metadata and JSONL include
+`target_timesteps`; an already-achieved target is rejected before starting learning
+or opening the metrics file. It does not mean additional transitions or PPO iterations.
+
 The checkpoint root also contains `METRICS.jsonl`, flushed after each completed
 update. It records all finite report metrics, cumulative counters, per-process
 elapsed training time and `session_*` counters. Resume appends to this file;
 elapsed time resets for each process, while cumulative counters continue.
 
-`scripts/run_training.py` supervises a timed run, captures its console log,
+`scripts/run_training.py` supervises a timed or cumulative-target run, captures its console log,
 records atomic `runs/<run-id>/status.json` updates, and points
 `runs/active-training.json` at the active run for local monitoring. It requires
-the final time-limit checkpoint before reporting success and refuses a second
+the matching final checkpoint before reporting success and refuses a second
 supervised writer in the same checkpoint directory.
 
 For a monitored twenty-minute experiment, use a unique run ID and a new
@@ -92,7 +102,25 @@ checkpoint directory (or explicitly pass `--resume` for an existing run):
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/run_training.py --run-id training-example --seconds 1200 --checkpoint-dir checkpoints/training-example
+
+# Resume the CPU checkpoint until one billion total transitions.
+.\.venv\Scripts\python.exe scripts/run_training.py --run-id training-1b-example --target-timesteps 1000000000 --resume
 ```
+
+The supervisor makes `--seconds` and `--target-timesteps` mutually exclusive;
+omitting both preserves the twenty-minute default. Target mode has no elapsed-time
+deadline. Completion requires exit code 0, matching target/save reason/resume origin,
+agreement between metadata, directory and running counters, and all eight checkpoint
+files present and nonempty. The lock includes native and supervisor PIDs and remains
+in place if the supervisor encounters an error while its child is still running.
+Direct `train.ps1` launches do not use that supervisor lock.
+
+On Windows, the supervisor uses `ES_CONTINUOUS | ES_SYSTEM_REQUIRED` during the run
+to prevent automatic idle sleep, then clears the request. It does not alter the
+saved power plan or keep the display on; deliberate sleep, shutdown or reboot can
+still interrupt local training. This machine's AC idle-sleep setting was ten minutes
+when inspected on 2026-09-16. `--no-active-run` keeps isolated verification runs from
+changing the dashboard's active pointer.
 
 The timed executable passed both CTest checks after rebuilding. A separate
 three-second supervisor check completed on 2026-09-16 with exit code 0, 57
@@ -107,6 +135,31 @@ iterations (10,384 transitions/second averaged over the training timer).
 `checkpoints/1v1-cpu/12464976/PROJECT_METADATA.json` records `time-limit`, and all
 recorded metrics are finite. The run directory holds `status.json`, `results.json`
 and the console log; these artifacts remain ignored.
+
+Before the longer run, all eight checkpoint files were copied and hash-verified
+under `models/1v1-cpu-20m/12464976/`, outside rolling retention. The original
+metrics, final status and results were also preserved in `models/1v1-cpu-20m/`.
+Use that baseline copy for later comparisons after the live checkpoint directory
+has advanced. Learning settings and reward weights remain unchanged.
+
+The one-billion-transition continuation, `training-1b-20260916T090155Z`, started
+at 2026-09-16 09:01:55 UTC. Fresh-process resume verified models, Adam state and
+counters from 12,464,976 transitions / 1,475 iterations; new updates and direct
+goal/timeout counters were observed. Its target is **1,000,000,000 total
+transitions**, with no time limit. Final completion remains pending. The live
+dashboard shows remaining transitions and an ETA derived from this session's
+transitions divided by elapsed training time. An hourly follow-up checks for
+completion or failure and stays quiet while training progresses normally.
+
+Target support passed both CTests and twelve isolated native acceptance cases,
+including fresh/resumed cumulative targets, already-achieved rejection without
+file changes, integer validation and earlier time/iteration limits. Report:
+`artifacts/training/target-check-20260916T085959Z-b24f7e/verification.json`.
+Separate supervisor checks reached 304 transitions for target 200, resumed to
+456 for cumulative target 305, and passed a one-second time-limit regression.
+Their status records start with `runs/supervisor-target-*-20260916T0901/` and
+`runs/supervisor-time-regression-20260916T0901/`. They did not alter the active
+dashboard pointer or the normal checkpoint directory.
 
 Combined scoring was 1,366 goals: 0.986 per five minutes of simulated arena time
 over the full run, rising to 1.834 over its final 100 updates. The corresponding

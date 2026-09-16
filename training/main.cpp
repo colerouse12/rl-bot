@@ -466,16 +466,18 @@ int main(int argc, char** argv) {
         fs::path configPath = "configs/1v1-smoke.json";
         bool resume = false, contractCheck = false, environmentCheck = false, validateOnly = false;
         std::optional<int64_t> maxSeconds;
+        std::optional<int64_t> targetTimesteps;
         json overrides = json::object();
         for (int i = 1; i < argc; ++i) {
             const std::string option = argv[i];
             if (option == "--help") {
                 std::cout << "rl-bot-train --config FILE [--resume] [--checkpoint-dir PATH] [--mesh-dir PATH]\n"
                              "  [--seed N] [--device cpu] [--max-iterations N] [--max-seconds N] [--contract-check]\n"
-                             "  [--check-environment] [--validate-config]\n"
+                             "  [--target-timesteps N] [--check-environment] [--validate-config]\n"
                              "Paths are relative to the current directory. max-iterations=0 runs until Ctrl+C.\n"
                              "Ctrl+C saves and exits after the current PPO iteration finishes.\n"
                              "max-seconds is a positive training duration; the current PPO iteration finishes before saving.\n"
+                             "target-timesteps is a positive cumulative total, including resumed training; the final iteration may overshoot.\n"
                              "A bounded run saves after N additional PPO iterations; rollout length can overshoot.\n";
                 return 0;
             }
@@ -489,13 +491,16 @@ int main(int argc, char** argv) {
             else if (option == "--checkpoint-dir") overrides["checkpoint_dir"] = value;
             else if (option == "--mesh-dir") overrides["mesh_dir"] = value;
             else if (option == "--device") overrides["device"] = value;
-            else if (option == "--seed" || option == "--max-iterations" || option == "--max-seconds") {
+            else if (option == "--seed" || option == "--max-iterations" || option == "--max-seconds" || option == "--target-timesteps") {
                 size_t consumed = 0;
                 auto integer = std::stoll(value, &consumed);
                 Require(consumed == value.size(), "Invalid integer for " + option);
                 if (option == "--max-seconds") {
                     Require(integer > 0 && integer <= INT32_MAX, "--max-seconds must be a positive integer no greater than 2147483647");
                     maxSeconds = integer;
+                } else if (option == "--target-timesteps") {
+                    Require(integer > 0, "--target-timesteps must be a positive signed 64-bit integer");
+                    targetTimesteps = integer;
                 } else overrides[option == "--seed" ? "random_seed" : "max_iterations"] = integer;
             } else throw std::runtime_error("Unknown argument: " + option);
         }
@@ -515,6 +520,12 @@ int main(int argc, char** argv) {
             Require(resume || !latest, "Checkpoints already exist. Use --resume or choose a fresh --checkpoint-dir.");
             Require(!resume || latest.has_value(), "--resume requires a saved checkpoint");
             if (latest) loadedMetadata = ValidateResume(*latest, config);
+            if (targetTimesteps) {
+                const uint64_t savedTimesteps = loadedMetadata ? loadedMetadata->at("total_timesteps").get<uint64_t>() : 0;
+                Require(static_cast<uint64_t>(*targetTimesteps) > savedTimesteps,
+                        "--target-timesteps has already been reached: checkpoint total=" + std::to_string(savedTimesteps) +
+                        ", requested target=" + std::to_string(*targetTimesteps));
+            }
         }
         CheckMeshes(config.at("mesh_dir").get<std::string>());
         at::set_num_threads(config.at("torch_threads").get<int>());
@@ -545,7 +556,10 @@ int main(int argc, char** argv) {
             return std::chrono::duration<double>(std::chrono::steady_clock::now() - trainingStarted).count();
         };
         auto timeLimitReached = [&] { return maxSeconds && elapsedTrainingSeconds() >= *maxSeconds; };
-        learner->stopRequested = [&] { return stopRequested != 0 || timeLimitReached(); };
+        auto timestepTargetReached = [&] {
+            return targetTimesteps && learner->totalTimesteps >= static_cast<uint64_t>(*targetTimesteps);
+        };
+        learner->stopRequested = [&] { return stopRequested != 0 || timestepTargetReached() || timeLimitReached(); };
         Require(learner->obsSize == rlbot::kObservationSize && learner->numActions == rlbot::kActionCount, "Learner contract dimensions do not match");
         const auto initialTimesteps = learner->totalTimesteps;
         const auto initialIterations = learner->totalIterations;
@@ -558,6 +572,7 @@ int main(int argc, char** argv) {
         std::ofstream metricsOutput(metricsPath, resume ? std::ios::app : std::ios::trunc);
         Require(metricsOutput.good(), "Cannot write training metrics: " + metricsPath.string());
         const json durationLimit = maxSeconds ? json(*maxSeconds) : json(nullptr);
+        const json timestepTarget = targetTimesteps ? json(*targetTimesteps) : json(nullptr);
         json latestReport = json::object();
         learner->iterationCallback = [&](GGL::Learner* current, GGL::Report& report) {
             for (const auto& [name, value] : report.data) Require(std::isfinite(value), "Nonfinite training metric: " + name);
@@ -569,6 +584,7 @@ int main(int argc, char** argv) {
             metricsOutput << json({
                 {"metrics_schema", 1}, {"elapsed_training_seconds", elapsedTrainingSeconds()},
                 {"duration_limit_seconds", durationLimit}, {"total_timesteps", current->totalTimesteps},
+                {"target_timesteps", timestepTarget},
                 {"total_iterations", current->totalIterations},
                 {"session_timesteps", current->totalTimesteps - initialTimesteps},
                 {"session_iterations", current->totalIterations - initialIterations},
@@ -586,8 +602,9 @@ int main(int argc, char** argv) {
                 {"metadata_schema", 1}, {"compatibility", Compatibility(config)}, {"run_config", config},
                 {"rewards", RewardDescription()}, {"total_timesteps", current->totalTimesteps},
                 {"total_iterations", current->totalIterations}, {"models", ModelState(current, true)},
-                {"save_reason", stopRequested ? "interrupt-requested" : timeLimitReached() ? "time-limit" : boundedEnd ? "bounded-run-limit" : "periodic-save"},
+                {"save_reason", stopRequested ? "interrupt-requested" : timestepTargetReached() ? "timestep-target" : timeLimitReached() ? "time-limit" : boundedEnd ? "bounded-run-limit" : "periodic-save"},
                 {"elapsed_training_seconds", elapsedTrainingSeconds()}, {"duration_limit_seconds", durationLimit},
+                {"target_timesteps", timestepTarget},
                 {"resumed_from_timesteps", initialTimesteps}, {"metrics", latestReport},
                 {"build", {{"type", RLBOT_BUILD_TYPE}, {"compiler", RLBOT_COMPILER}, {"libtorch", RLBOT_TORCH_VERSION}}},
                 {"runtime", {{"device", "cpu"}, {"send_metrics", false}, {"render", false}, {"half_precision", false},

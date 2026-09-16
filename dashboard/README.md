@@ -12,7 +12,9 @@ incrementally reads `METRICS.jsonl` (with lowercase compatibility), and reports 
 checkpoint directories that contain `PROJECT_METADATA.json`. Metrics are
 training diagnostics, not evaluated win rate or game strength. It accepts
 partial JSONL writes and finite-value filtering, and never follows paths outside
-the repository. The scoring panel shows reconstructed combined goals and
+the repository. The progress cards show cumulative transitions, target,
+remaining work, and an ETA derived from fresh session telemetry; an ETA is
+withheld until resumed runs produce matching session records. The scoring panel shows reconstructed combined goals and
 timeout reset rates normalized to simulated five-minute arena time; these are
 training episode rates, not completed-match averages or win rate. There are no
 start, stop, delete, or external network requests.

@@ -19,6 +19,13 @@ per five minutes of simulated arena time. This establishes scoring activity,
 not competitive playing strength. The normal training command is
 `.\scripts\train.ps1`; see the training note for evidence and launch details.
 
+A continuation toward **one billion total transitions** began at 2026-09-16
+09:01:55 UTC from the 12,464,976-transition checkpoint. It retains the same
+standard-map 1v1 environment, rewards and learning configuration. The twenty-minute
+baseline is preserved outside rolling checkpoint retention. This longer run is
+in progress; the simulator and checkpoint evidence above remain the verified
+proof-of-concept results until it finishes.
+
 ## Milestones 1-3: training readiness
 
 - Pin the author-published source at

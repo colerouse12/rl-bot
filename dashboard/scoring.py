@@ -121,6 +121,8 @@ class ScoringHistory:
             recent_goals = sum(r["goals"] for r in self.recent)
             recent_timeouts = sum(r["timeouts"] or 0 for r in self.recent)
             timeout_method = next(iter(self.methods)) if len(self.methods) == 1 else "mixed"
+            recent_methods = {r["method"] for r in self.recent}
+            recent_timeout_method = next(iter(recent_methods)) if len(recent_methods) == 1 else "mixed"
             note = ("Directly counted episode resets without a goal." if timeout_method == "exact" else
                     "Estimated from mean episode length and simulated time, minus goals. Historical logs did not count timeout resets; update boundaries and PPO truncations can affect this estimate.")
             return {
@@ -132,7 +134,8 @@ class ScoringHistory:
                 "timeout_count": self.timeouts,
                 "timeouts_per_5_minutes": None if "unavailable" in self.methods else self.timeouts * 300 / self.seconds,
                 "recent_timeouts_per_5_minutes": None if any(r["timeouts"] is None for r in self.recent) else recent_timeouts * 300 / recent_seconds,
-                "timeout_method": timeout_method, "timeout_note": note,
+                "timeout_method": timeout_method, "recent_timeout_method": recent_timeout_method,
+                "timeout_note": note,
             }
 
     def metrics(self) -> list[dict]:
