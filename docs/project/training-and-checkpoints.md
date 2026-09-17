@@ -151,6 +151,25 @@ dashboard shows remaining transitions and an ETA derived from this session's
 transitions divided by elapsed training time. An hourly follow-up checks for
 completion or failure and stays quiet while training progresses normally.
 
+The user paused this continuation at 2026-09-17 02:26:36 UTC, before the target
+was reached. The verified recovery checkpoint is `checkpoints/1v1-cpu/253608752/`:
+**253,608,752 cumulative transitions and 27,982 PPO iterations**. All eight files
+were copied to `models/1v1-cpu-paused-20260917T022636Z/253608752/` and SHA-256
+verified before stopping the native process. The hidden supervisor launches with
+`CREATE_NO_WINDOW`, so its child has no console for the documented Ctrl+C signal;
+this pause used process termination after preserving a complete periodic save,
+not a graceful final save. The actual exit code, 4294967295, and original supervisor
+failure report remain recorded. Both processes exited and the writer lock cleared.
+
+The run status is annotated `paused` with the user's request and recovery details;
+the hourly monitor is paused. Last telemetry reached 253,626,160 transitions, so
+17,408 logged transitions after the checkpoint are not retained in the model.
+The dashboard's last telemetry and ETA can remain visible while paused; the saved
+checkpoint count above is the resume point. Evidence is in the ignored run files
+`pause-checkpoint.json` and `status-before-user-pause-annotation.json`. No reward or
+learning settings changed. Resume with a fresh run ID and the existing checkpoint
+directory when requested; the one-billion cumulative target remains unfinished.
+
 Target support passed both CTests and twelve isolated native acceptance cases,
 including fresh/resumed cumulative targets, already-achieved rejection without
 file changes, integer validation and earlier time/iteration limits. Report:
